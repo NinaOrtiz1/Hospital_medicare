@@ -3,9 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Medical Color System - Calming blues, greens, soft grays */
 :root {
-  /* Light Mode - Clean, professional medical aesthetic */
   --background: oklch(0.985 0.002 240);
   --foreground: oklch(0.25 0.015 250);
   
@@ -15,11 +13,9 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.25 0.015 250);
   
-  /* Primary - Medical Blue */
   --primary: oklch(0.55 0.18 240);
   --primary-foreground: oklch(0.98 0 0);
   
-  /* Secondary - Soft Gray Blue */
   --secondary: oklch(0.95 0.01 240);
   --secondary-foreground: oklch(0.35 0.02 250);
   
@@ -29,7 +25,6 @@
   --accent: oklch(0.94 0.02 240);
   --accent-foreground: oklch(0.30 0.02 250);
   
-  /* Semantic Colors */
   --destructive: oklch(0.60 0.18 25);
   --destructive-foreground: oklch(0.98 0 0);
   
@@ -46,7 +41,6 @@
   --input: oklch(0.91 0.01 240);
   --ring: oklch(0.55 0.18 240);
   
-  /* Chart Colors - Medical Theme */
   --chart-1: oklch(0.55 0.18 240);
   --chart-2: oklch(0.65 0.17 155);
   --chart-3: oklch(0.60 0.15 200);
@@ -55,7 +49,6 @@
   
   --radius: 0.75rem;
   
-  /* Sidebar */
   --sidebar: oklch(0.98 0.005 240);
   --sidebar-foreground: oklch(0.25 0.015 250);
   --sidebar-primary: oklch(0.55 0.18 240);
@@ -66,7 +59,6 @@
   --sidebar-ring: oklch(0.55 0.18 240);
 }
 
-/* Soft Dark Mode - Eye-friendly, no pure black */
 .dark {
   --background: oklch(0.18 0.015 250);
   --foreground: oklch(0.92 0.01 240);
@@ -77,7 +69,6 @@
   --popover: oklch(0.22 0.015 250);
   --popover-foreground: oklch(0.92 0.01 240);
   
-  /* Primary - Softer Blue for Dark Mode */
   --primary: oklch(0.65 0.16 240);
   --primary-foreground: oklch(0.15 0.01 250);
   
@@ -106,14 +97,12 @@
   --input: oklch(0.32 0.015 250);
   --ring: oklch(0.65 0.16 240);
   
-  /* Chart Colors - Dark Mode */
   --chart-1: oklch(0.65 0.16 240);
   --chart-2: oklch(0.60 0.18 155);
   --chart-3: oklch(0.58 0.14 200);
   --chart-4: oklch(0.70 0.16 70);
   --chart-5: oklch(0.55 0.20 25);
   
-  /* Sidebar Dark */
   --sidebar: oklch(0.15 0.015 250);
   --sidebar-foreground: oklch(0.92 0.01 240);
   --sidebar-primary: oklch(0.65 0.16 240);
@@ -124,7 +113,6 @@
   --sidebar-ring: oklch(0.65 0.16 240);
 }
 
-/* High Contrast Mode for Accessibility */
 .high-contrast {
   --background: oklch(1 0 0);
   --foreground: oklch(0.15 0 0);
@@ -149,7 +137,7 @@
 
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
+  --font-mono: ui-monospace, monospace;
   
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -204,14 +192,12 @@
   }
 }
 
-/* Accessibility - Focus Indicators */
 @layer base {
   *:focus-visible {
     @apply outline-2 outline-offset-2 outline-ring;
   }
 }
 
-/* Text Size Classes for Accessibility */
 .text-size-small {
   font-size: 0.875rem;
 }
@@ -228,7 +214,6 @@
   font-size: 1.25rem;
 }
 
-/* Smooth Transitions */
 @layer utilities {
   .transition-smooth {
     @apply transition-all duration-200 ease-in-out;

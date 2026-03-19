@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { AccessibilityProvider } from '@/components/accessibility-provider'
 import './globals.css'
@@ -13,7 +12,6 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'MediCare - Hospital Management System',
   description: 'Professional hospital management dashboard for healthcare administration',
-  generator: 'v0.app',
 }
 
 export const viewport: Viewport = {
@@ -43,7 +41,6 @@ export default function RootLayout({
             {children}
           </AccessibilityProvider>
         </ThemeProvider>
-        <Analytics />
       </body>
     </html>
   )

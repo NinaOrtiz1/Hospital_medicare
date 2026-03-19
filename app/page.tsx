@@ -20,13 +20,8 @@ export default function HospitalDashboard() {
   const [activeSection, setActiveSection] = React.useState('dashboard')
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false)
 
-  const handleSectionChange = (section: string) => {
-    setActiveSection(section)
-  }
-
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Skip to main content link for accessibility */}
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md"
@@ -34,23 +29,18 @@ export default function HospitalDashboard() {
         Saltar al contenido principal
       </a>
 
-      {/* Sidebar Navigation */}
       <Sidebar
         activeSection={activeSection}
-        onSectionChange={handleSectionChange}
+        onSectionChange={setActiveSection}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         <Header />
 
         <main id="main-content" className="flex-1" role="main" aria-label="Contenido principal">
-          <ContentTabs
-            activeTab={activeSection}
-            onTabChange={handleSectionChange}
-          >
+          <ContentTabs activeTab={activeSection} onTabChange={setActiveSection}>
             <ContentTabPanel value="dashboard">
               <DashboardOverview userName="Dr. Carlos Mendoza" />
             </ContentTabPanel>
@@ -74,7 +64,6 @@ export default function HospitalDashboard() {
         </main>
       </div>
 
-      {/* Accessibility Floating Button - loaded client-side only */}
       <AccessibilityPanel />
     </div>
   )
