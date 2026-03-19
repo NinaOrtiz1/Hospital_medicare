@@ -1,6 +1,5 @@
 'use client'
 
-import * as React from 'react'
 import {
   BarChart,
   Bar,
@@ -14,9 +13,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -25,8 +21,8 @@ import {
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
-  type ChartConfig,
 } from '@/components/ui/chart'
+import type { ChartConfig } from '@/components/ui/chart'
 
 // Sample data
 const appointmentsData = [

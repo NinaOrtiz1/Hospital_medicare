@@ -1,9 +1,33 @@
 'use client'
 
-import * as React from 'react'
+import dynamic from 'next/dynamic'
 import { StatCardsGrid } from './stat-cards'
-import { ChartsGrid } from './charts'
 import { RecentActivity, AlertsPanel } from './recent-activity'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+
+// Dynamic import for charts to avoid SSR issues with Recharts
+const ChartsGrid = dynamic(
+  () => import('./charts').then(mod => mod.ChartsGrid),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i}>
+            <CardHeader>
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-60" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-[300px] w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+)
 
 interface DashboardOverviewProps {
   userName?: string
@@ -18,7 +42,7 @@ export function DashboardOverview({ userName = 'Doctor' }: DashboardOverviewProp
           Dashboard
         </h1>
         <p className="text-lg text-muted-foreground">
-          Bienvenido de nuevo, {userName}. Aquí está el resumen de hoy.
+          Bienvenido de nuevo, {userName}. Aqui esta el resumen de hoy.
         </p>
       </div>
 
@@ -28,7 +52,7 @@ export function DashboardOverview({ userName = 'Doctor' }: DashboardOverviewProp
       {/* Charts */}
       <section aria-labelledby="charts-heading">
         <h2 id="charts-heading" className="text-xl font-semibold text-foreground mb-4">
-          Análisis y Estadísticas
+          Analisis y Estadisticas
         </h2>
         <ChartsGrid />
       </section>

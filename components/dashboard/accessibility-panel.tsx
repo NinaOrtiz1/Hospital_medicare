@@ -22,7 +22,7 @@ import {
 } from 'lucide-react'
 
 const textSizeLabels = {
-  small: 'Pequeño',
+  small: 'Pequeno',
   normal: 'Normal',
   large: 'Grande',
   xlarge: 'Extra Grande',
@@ -36,8 +36,18 @@ const textSizeOrder: Array<'small' | 'normal' | 'large' | 'xlarge'> = [
 ]
 
 export function AccessibilityPanel() {
-  const { textSize, setTextSize, highContrast, setHighContrast, resetSettings } =
-    useAccessibility()
+  const [mounted, setMounted] = React.useState(false)
+  const accessibility = useAccessibility()
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return null
+  }
+
+  const { textSize, setTextSize, highContrast, setHighContrast, resetSettings } = accessibility
 
   const increaseTextSize = () => {
     const currentIndex = textSizeOrder.indexOf(textSize)
@@ -62,7 +72,7 @@ export function AccessibilityPanel() {
           className={cn(
             'fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg',
             'bg-primary text-primary-foreground hover:bg-primary/90',
-            'transition-smooth hover:scale-110',
+            'transition-all duration-200 hover:scale-110',
             'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
           )}
           aria-label="Abrir panel de accesibilidad"
@@ -82,12 +92,11 @@ export function AccessibilityPanel() {
             <h3 className="font-semibold text-lg">Accesibilidad</h3>
           </div>
 
-          {/* Text Size Controls */}
           <div className="space-y-4">
             <div>
               <Label className="text-sm font-medium flex items-center gap-2 mb-3">
                 <Type className="h-4 w-4" aria-hidden="true" />
-                Tamaño de Texto
+                Tamano de Texto
               </Label>
               <div className="flex items-center justify-between gap-2">
                 <Button
@@ -96,7 +105,7 @@ export function AccessibilityPanel() {
                   onClick={decreaseTextSize}
                   disabled={textSize === 'small'}
                   className="gap-1"
-                  aria-label="Reducir tamaño de texto"
+                  aria-label="Reducir tamano de texto"
                 >
                   <ZoomOut className="h-4 w-4" aria-hidden="true" />
                   A-
@@ -113,13 +122,12 @@ export function AccessibilityPanel() {
                   onClick={increaseTextSize}
                   disabled={textSize === 'xlarge'}
                   className="gap-1"
-                  aria-label="Aumentar tamaño de texto"
+                  aria-label="Aumentar tamano de texto"
                 >
                   <ZoomIn className="h-4 w-4" aria-hidden="true" />
                   A+
                 </Button>
               </div>
-              {/* Text size preview bar */}
               <div className="mt-2 flex gap-1">
                 {textSizeOrder.map((size) => (
                   <div
@@ -137,7 +145,6 @@ export function AccessibilityPanel() {
 
             <Separator />
 
-            {/* High Contrast Mode */}
             <div className="flex items-center justify-between">
               <Label
                 htmlFor="high-contrast"
@@ -162,24 +169,22 @@ export function AccessibilityPanel() {
 
             <Separator />
 
-            {/* Reset Button */}
             <Button
               variant="outline"
               className="w-full gap-2"
               onClick={resetSettings}
-              aria-label="Restablecer configuración de accesibilidad"
+              aria-label="Restablecer configuracion de accesibilidad"
             >
               <RotateCcw className="h-4 w-4" aria-hidden="true" />
-              Restablecer Configuración
+              Restablecer Configuracion
             </Button>
           </div>
         </div>
 
-        {/* Keyboard Navigation Info */}
         <div className="bg-muted/50 px-4 py-3 border-t">
           <p className="text-xs text-muted-foreground">
             <strong>Atajos de teclado:</strong> Use Tab para navegar, Enter para
-            seleccionar, y Escape para cerrar menús.
+            seleccionar, y Escape para cerrar menus.
           </p>
         </div>
       </PopoverContent>
