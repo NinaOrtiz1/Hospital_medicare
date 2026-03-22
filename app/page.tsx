@@ -8,8 +8,11 @@ import { ContentTabs, ContentTabPanel } from '@/components/dashboard/content-tab
 import { DashboardOverview } from '@/components/dashboard/overview'
 import { PatientsSection } from '@/components/dashboard/patients-section'
 import { DoctorsSection } from '@/components/dashboard/doctors-section'
+import { UsersSection } from '@/components/dashboard/users-section'
 import { AppointmentsSection } from '@/components/dashboard/appointments-section'
 import { MedicalHistorySection } from '@/components/dashboard/medical-history-section'
+import { NotificationsSection } from '@/components/dashboard/notifications-section'
+import { SettingsSection } from '@/components/dashboard/settings-section'
 
 const AccessibilityPanel = dynamic(
   () => import('@/components/dashboard/accessibility-panel').then(mod => mod.AccessibilityPanel),
@@ -53,12 +56,24 @@ export default function HospitalDashboard() {
               <DoctorsSection />
             </ContentTabPanel>
 
+            <ContentTabPanel value="users">
+              <UsersSection />
+            </ContentTabPanel>
+
             <ContentTabPanel value="appointments">
               <AppointmentsSection />
             </ContentTabPanel>
 
             <ContentTabPanel value="medical-history">
               <MedicalHistorySection />
+            </ContentTabPanel>
+
+            <ContentTabPanel value="notifications">
+              <NotificationsSection />
+            </ContentTabPanel>
+
+            <ContentTabPanel value="settings">
+              <SettingsSection />
             </ContentTabPanel>
           </ContentTabs>
         </main>

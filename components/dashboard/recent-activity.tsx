@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   UserPlus,
   Calendar,
@@ -27,54 +28,6 @@ interface ActivityItem {
     fallback: string
   }
 }
-
-const activityItems: ActivityItem[] = [
-  {
-    id: '1',
-    type: 'patient',
-    title: 'Nuevo paciente registrado',
-    description: 'María García López - Consulta general',
-    time: 'Hace 5 min',
-    status: 'success',
-    avatar: { fallback: 'MG' },
-  },
-  {
-    id: '2',
-    type: 'appointment',
-    title: 'Cita completada',
-    description: 'Dr. Rodríguez - Juan Pérez - Cardiología',
-    time: 'Hace 15 min',
-    status: 'success',
-    avatar: { fallback: 'JP' },
-  },
-  {
-    id: '3',
-    type: 'alert',
-    title: 'Alerta de laboratorio',
-    description: 'Resultados críticos - Ana Martínez',
-    time: 'Hace 30 min',
-    status: 'warning',
-    avatar: { fallback: 'AM' },
-  },
-  {
-    id: '4',
-    type: 'appointment',
-    title: 'Cita reprogramada',
-    description: 'Dr. García - Carlos Ruiz - Neurología',
-    time: 'Hace 1 hora',
-    status: 'pending',
-    avatar: { fallback: 'CR' },
-  },
-  {
-    id: '5',
-    type: 'record',
-    title: 'Historia clínica actualizada',
-    description: 'Laura Sánchez - Datos de vacunación',
-    time: 'Hace 2 horas',
-    status: 'success',
-    avatar: { fallback: 'LS' },
-  },
-]
 
 const typeIcons = {
   patient: UserPlus,
@@ -102,6 +55,53 @@ const statusStyles = {
 }
 
 export function RecentActivity() {
+  const [activityItems, setActivityItems] = React.useState<ActivityItem[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    const fetchActivity = async () => {
+      try {
+        const response = await fetch('/api/activity')
+        if (!response.ok) throw new Error('Failed to fetch activity')
+        const data = await response.json()
+        setActivityItems(data.activityItems || [])
+      } catch (error) {
+        console.error('Error fetching activity:', error)
+        setActivityItems([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchActivity()
+  }, [])
+
+  if (loading) {
+    return (
+      <Card className="transition-smooth hover:shadow-lg">
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-60" />
+        </CardHeader>
+        <CardContent className="p-0">
+          <ScrollArea className="h-[400px]">
+            <div className="px-6 pb-6 space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-start gap-4 p-3">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                    <Skeleton className="h-3 w-1/4" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="transition-smooth hover:shadow-lg">
       <CardHeader>
@@ -111,7 +111,7 @@ export function RecentActivity() {
       <CardContent className="p-0">
         <ScrollArea className="h-[400px]">
           <div className="px-6 pb-6 space-y-4" role="list" aria-label="Lista de actividades recientes">
-            {activityItems.map((item) => {
+            {activityItems.length > 0 ? activityItems.map((item) => {
               const TypeIcon = typeIcons[item.type]
               const statusConfig = item.status ? statusStyles[item.status] : null
               const StatusIcon = statusConfig?.icon
@@ -158,7 +158,12 @@ export function RecentActivity() {
                   </div>
                 </div>
               )
-            })}
+            }) : (
+              <div className="px-6 py-8 text-center text-muted-foreground">
+                <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p>No hay actividad reciente</p>
+              </div>
+            )}
           </div>
         </ScrollArea>
       </CardContent>
@@ -173,30 +178,6 @@ interface AlertItem {
   description: string
   time: string
 }
-
-const alertItems: AlertItem[] = [
-  {
-    id: '1',
-    type: 'urgent',
-    title: 'Paciente en observación crítica',
-    description: 'UCI - Cama 12 - Pedro Hernández',
-    time: 'Hace 10 min',
-  },
-  {
-    id: '2',
-    type: 'warning',
-    title: 'Bajo stock de medicamentos',
-    description: 'Insulina y antibióticos - Farmacia',
-    time: 'Hace 1 hora',
-  },
-  {
-    id: '3',
-    type: 'info',
-    title: 'Mantenimiento programado',
-    description: 'Equipos de radiología - Mañana 6AM',
-    time: 'Hace 3 horas',
-  },
-]
 
 const alertTypeStyles = {
   urgent: {
@@ -217,6 +198,46 @@ const alertTypeStyles = {
 }
 
 export function AlertsPanel() {
+  const [alertItems, setAlertItems] = React.useState<AlertItem[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const response = await fetch('/api/activity')
+        if (!response.ok) throw new Error('Failed to fetch alerts')
+        const data = await response.json()
+        setAlertItems(data.alertItems || [])
+      } catch (error) {
+        console.error('Error fetching alerts:', error)
+        setAlertItems([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchAlerts()
+  }, [])
+
+  if (loading) {
+    return (
+      <Card className="transition-smooth hover:shadow-lg">
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-60" />
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="p-4 rounded-lg border-l-4 border-l-muted">
+              <Skeleton className="h-4 w-20 mb-2" />
+              <Skeleton className="h-5 w-3/4 mb-1" />
+              <Skeleton className="h-3 w-1/2" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="transition-smooth hover:shadow-lg">
       <CardHeader>
@@ -227,7 +248,7 @@ export function AlertsPanel() {
         <CardDescription>Notificaciones importantes que requieren atención</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {alertItems.map((alert) => {
+        {alertItems.length > 0 ? alertItems.map((alert) => {
           const styles = alertTypeStyles[alert.type]
           return (
             <div
@@ -255,7 +276,12 @@ export function AlertsPanel() {
               </div>
             </div>
           )
-        })}
+        }) : (
+          <div className="py-8 text-center text-muted-foreground">
+            <CheckCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p>No hay alertas activas</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

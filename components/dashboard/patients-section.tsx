@@ -31,129 +31,105 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  Search,
-  Filter,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
   UserPlus,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
-  FileText,
+  Search,
   Phone,
   Mail,
+  MoreHorizontal,
+  Eye,
+  FileText,
+  Edit,
+  Trash2,
 } from 'lucide-react'
 
 interface Patient {
-  id: string
-  name: string
+  id: number
+  nombre: string
+  apellido: string
+  fecha_nacimiento: string
+  telefono: string
   email: string
-  phone: string
-  age: number
-  gender: 'M' | 'F'
-  bloodType: string
-  lastVisit: string
-  status: 'active' | 'inactive' | 'critical'
-  avatar?: string
+  direccion: string
+  created_at: string
+  updated_at: string
 }
 
-const patients: Patient[] = [
-  {
-    id: '1',
-    name: 'María García López',
-    email: 'maria.garcia@email.com',
-    phone: '+52 555 123 4567',
-    age: 34,
-    gender: 'F',
-    bloodType: 'O+',
-    lastVisit: '2024-03-15',
-    status: 'active',
-  },
-  {
-    id: '2',
-    name: 'Juan Pérez Rodríguez',
-    email: 'juan.perez@email.com',
-    phone: '+52 555 234 5678',
-    age: 45,
-    gender: 'M',
-    bloodType: 'A-',
-    lastVisit: '2024-03-14',
-    status: 'critical',
-  },
-  {
-    id: '3',
-    name: 'Ana Martínez Sánchez',
-    email: 'ana.martinez@email.com',
-    phone: '+52 555 345 6789',
-    age: 28,
-    gender: 'F',
-    bloodType: 'B+',
-    lastVisit: '2024-03-10',
-    status: 'active',
-  },
-  {
-    id: '4',
-    name: 'Carlos Ruiz Hernández',
-    email: 'carlos.ruiz@email.com',
-    phone: '+52 555 456 7890',
-    age: 52,
-    gender: 'M',
-    bloodType: 'AB+',
-    lastVisit: '2024-02-28',
-    status: 'inactive',
-  },
-  {
-    id: '5',
-    name: 'Laura Sánchez Torres',
-    email: 'laura.sanchez@email.com',
-    phone: '+52 555 567 8901',
-    age: 39,
-    gender: 'F',
-    bloodType: 'O-',
-    lastVisit: '2024-03-12',
-    status: 'active',
-  },
-  {
-    id: '6',
-    name: 'Pedro Hernández Díaz',
-    email: 'pedro.hernandez@email.com',
-    phone: '+52 555 678 9012',
-    age: 61,
-    gender: 'M',
-    bloodType: 'A+',
-    lastVisit: '2024-03-16',
-    status: 'critical',
-  },
-]
-
-const statusStyles = {
-  active: {
-    bg: 'bg-success/10',
-    text: 'text-success',
-    label: 'Activo',
-  },
-  inactive: {
-    bg: 'bg-muted',
-    text: 'text-muted-foreground',
-    label: 'Inactivo',
-  },
-  critical: {
-    bg: 'bg-destructive/10',
-    text: 'text-destructive',
-    label: 'Crítico',
-  },
-}
 
 export function PatientsSection() {
+  const [patients, setPatients] = React.useState<Patient[]>([])
+  const [loading, setLoading] = React.useState(true)
   const [searchQuery, setSearchQuery] = React.useState('')
-  const [statusFilter, setStatusFilter] = React.useState<string>('all')
+  const [isAddModalOpen, setIsAddModalOpen] = React.useState(false)
+  const [newPatient, setNewPatient] = React.useState({
+    nombre: '',
+    apellido: '',
+    fecha_nacimiento: '',
+    telefono: '',
+    email: '',
+    direccion: ''
+  })
+
+  React.useEffect(() => {
+    fetchPatients()
+  }, [])
+
+  const fetchPatients = () => {
+    fetch('/api/pacientes')
+      .then(response => response.json())
+      .then(data => {
+        setPatients(data)
+        setLoading(false)
+      })
+      .catch(error => {
+        console.error('Error fetching patients:', error)
+        setLoading(false)
+      })
+  }
+
+  const handleAddPatient = async () => {
+    try {
+      const response = await fetch('/api/pacientes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newPatient),
+      })
+      const result = await response.json()
+      if (result.id) {
+        setIsAddModalOpen(false)
+        setNewPatient({
+          nombre: '',
+          apellido: '',
+          fecha_nacimiento: '',
+          telefono: '',
+          email: '',
+          direccion: ''
+        })
+        fetchPatients() // Refresh list
+      }
+    } catch (error) {
+      console.error('Error adding patient:', error)
+    }
+  }
 
   const filteredPatients = patients.filter((patient) => {
-    const matchesSearch =
-      patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      patient.email.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || patient.status === statusFilter
-    return matchesSearch && matchesStatus
+    const fullName = `${patient.nombre} ${patient.apellido}`.toLowerCase()
+    return fullName.includes(searchQuery.toLowerCase()) ||
+           patient.email.toLowerCase().includes(searchQuery.toLowerCase())
   })
+
+  if (loading) {
+    return <div>Cargando pacientes...</div>
+  }
 
   return (
     <div className="space-y-6">
@@ -165,10 +141,85 @@ export function PatientsSection() {
             Gestiona la información de los pacientes del hospital
           </p>
         </div>
-        <Button className="gap-2 shadow-sm">
-          <UserPlus className="w-4 h-4" aria-hidden="true" />
-          Nuevo Paciente
-        </Button>
+        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 shadow-sm">
+              <UserPlus className="w-4 h-4" aria-hidden="true" />
+              Nuevo Paciente
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Agregar Nuevo Paciente</DialogTitle>
+              <DialogDescription>
+                Complete la información del paciente.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Nombre</label>
+                  <Input
+                    value={newPatient.nombre}
+                    onChange={(e) => setNewPatient({...newPatient, nombre: e.target.value})}
+                    placeholder="Nombre"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Apellido</label>
+                  <Input
+                    value={newPatient.apellido}
+                    onChange={(e) => setNewPatient({...newPatient, apellido: e.target.value})}
+                    placeholder="Apellido"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Fecha de Nacimiento</label>
+                <Input
+                  type="date"
+                  value={newPatient.fecha_nacimiento}
+                  onChange={(e) => setNewPatient({...newPatient, fecha_nacimiento: e.target.value})}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Teléfono</label>
+                  <Input
+                    value={newPatient.telefono}
+                    onChange={(e) => setNewPatient({...newPatient, telefono: e.target.value})}
+                    placeholder="Teléfono"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Email</label>
+                  <Input
+                    type="email"
+                    value={newPatient.email}
+                    onChange={(e) => setNewPatient({...newPatient, email: e.target.value})}
+                    placeholder="Email"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Dirección</label>
+                <Input
+                  value={newPatient.direccion}
+                  onChange={(e) => setNewPatient({...newPatient, direccion: e.target.value})}
+                  placeholder="Dirección"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddPatient}>
+                Agregar Paciente
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Filters */}
@@ -188,20 +239,6 @@ export function PatientsSection() {
                 aria-label="Buscar pacientes"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[150px]" aria-label="Filtrar por estado">
-                  <SelectValue placeholder="Estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="active">Activos</SelectItem>
-                  <SelectItem value="inactive">Inactivos</SelectItem>
-                  <SelectItem value="critical">Críticos</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -220,111 +257,85 @@ export function PatientsSection() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Paciente</TableHead>
-                  <TableHead>Contacto</TableHead>
-                  <TableHead>Edad</TableHead>
-                  <TableHead>Tipo de Sangre</TableHead>
-                  <TableHead>Última Visita</TableHead>
-                  <TableHead>Estado</TableHead>
+                  <TableHead>Fecha de Nacimiento</TableHead>
+                  <TableHead>Teléfono</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Dirección</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPatients.map((patient) => {
-                  const status = statusStyles[patient.status]
-                  return (
-                    <TableRow key={patient.id} className="transition-smooth hover:bg-accent/50">
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={patient.avatar} />
-                            <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                              {patient.name
-                                .split(' ')
-                                .map((n) => n[0])
-                                .join('')
-                                .slice(0, 2)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium text-foreground">{patient.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              ID: #{patient.id.padStart(5, '0')}
-                            </p>
-                          </div>
+                {filteredPatients.map((patient) => (
+                  <TableRow key={patient.id} className="transition-smooth hover:bg-accent/50">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                            {patient.nombre[0]}{patient.apellido[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-foreground">{patient.nombre} {patient.apellido}</p>
+                          <p className="text-sm text-muted-foreground">
+                            ID: #{patient.id}
+                          </p>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1 text-sm">
-                            <Mail className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
-                            {patient.email}
-                          </div>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Phone className="w-3 h-3" aria-hidden="true" />
-                            {patient.phone}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-medium">{patient.age}</span>
-                        <span className="text-muted-foreground ml-1">
-                          ({patient.gender})
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="font-mono">
-                          {patient.bloodType}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {new Date(patient.lastVisit).toLocaleDateString('es-ES', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={cn('gap-1', status.bg, status.text)}>
-                          {status.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Acciones para ${patient.name}`}
-                            >
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="gap-2 cursor-pointer">
-                              <Eye className="w-4 h-4" />
-                              Ver Perfil
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2 cursor-pointer">
-                              <FileText className="w-4 h-4" />
-                              Historial Médico
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2 cursor-pointer">
-                              <Edit className="w-4 h-4" />
-                              Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="gap-2 cursor-pointer text-destructive">
-                              <Trash2 className="w-4 h-4" />
-                              Eliminar
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(patient.fecha_nacimiento).toLocaleDateString('es-ES')}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 text-sm">
+                        <Phone className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
+                        {patient.telefono}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 text-sm">
+                        <Mail className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
+                        {patient.email}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {patient.direccion || 'No especificada'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Acciones para ${patient.nombre} ${patient.apellido}`}
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="gap-2 cursor-pointer">
+                            <Eye className="w-4 h-4" />
+                            Ver Perfil
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="gap-2 cursor-pointer">
+                            <FileText className="w-4 h-4" />
+                            Historial Médico
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="gap-2 cursor-pointer">
+                            <Edit className="w-4 h-4" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="gap-2 cursor-pointer text-destructive">
+                            <Trash2 className="w-4 h-4" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>

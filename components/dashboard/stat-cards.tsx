@@ -98,40 +98,116 @@ export function StatCard({
 }
 
 export function StatCardsGrid() {
-  const stats: StatCardProps[] = [
-    {
-      title: 'Total Pacientes',
-      value: '2,847',
-      description: '127 nuevos este mes',
-      icon: Users,
-      trend: { value: 12, isPositive: true },
-      variant: 'info',
-    },
-    {
-      title: 'Doctores Activos',
-      value: '48',
-      description: '12 especialidades',
-      icon: UserCog,
-      trend: { value: 4, isPositive: true },
-      variant: 'success',
-    },
-    {
-      title: 'Citas de Hoy',
-      value: '156',
-      description: '23 pendientes',
-      icon: CalendarDays,
-      trend: { value: 8, isPositive: true },
-      variant: 'warning',
-    },
-    {
-      title: 'Alertas',
-      value: '7',
-      description: '3 urgentes',
-      icon: AlertTriangle,
-      trend: { value: 15, isPositive: false },
-      variant: 'alert',
-    },
-  ]
+  const [stats, setStats] = React.useState<StatCardProps[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/stats')
+        if (!response.ok) {
+          throw new Error('Failed to fetch stats')
+        }
+        const data = await response.json()
+
+        const statsData: StatCardProps[] = [
+          {
+            title: 'Total Pacientes',
+            value: data.totalPacientes || 0,
+            description: `${data.nuevosPacientesMes || 0} nuevos este mes`,
+            icon: Users,
+            trend: { value: 12, isPositive: true }, // Podríamos calcular trend real
+            variant: 'info',
+          },
+          {
+            title: 'Doctores Activos',
+            value: data.totalDoctores || 0,
+            description: 'Doctores registrados',
+            icon: UserCog,
+            trend: { value: 4, isPositive: true },
+            variant: 'success',
+          },
+          {
+            title: 'Citas de Hoy',
+            value: data.citasHoy || 0,
+            description: `${data.citasPendientes || 0} pendientes`,
+            icon: CalendarDays,
+            trend: { value: 8, isPositive: true },
+            variant: 'warning',
+          },
+          {
+            title: 'Alertas',
+            value: data.alertas || 0,
+            description: `${data.alertasUrgentes || 0} urgentes`,
+            icon: AlertTriangle,
+            trend: { value: 15, isPositive: false },
+            variant: 'alert',
+          },
+        ]
+
+        setStats(statsData)
+      } catch (error) {
+        console.error('Error fetching stats:', error)
+        // Fallback to mock data
+        setStats([
+          {
+            title: 'Total Pacientes',
+            value: 'Error',
+            description: 'No se pudieron cargar los datos',
+            icon: Users,
+            variant: 'alert',
+          },
+          {
+            title: 'Doctores Activos',
+            value: 'Error',
+            description: 'No se pudieron cargar los datos',
+            icon: UserCog,
+            variant: 'alert',
+          },
+          {
+            title: 'Citas de Hoy',
+            value: 'Error',
+            description: 'No se pudieron cargar los datos',
+            icon: CalendarDays,
+            variant: 'alert',
+          },
+          {
+            title: 'Alertas',
+            value: 'Error',
+            description: 'No se pudieron cargar los datos',
+            icon: AlertTriangle,
+            variant: 'alert',
+          },
+        ])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [])
+
+  if (loading) {
+    return (
+      <div
+        className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
+        role="region"
+        aria-label="Estadísticas generales"
+      >
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i}>
+            <CardContent className="p-6">
+              <div className="animate-pulse">
+                <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                <div className="h-8 bg-muted rounded w-1/2 mb-2"></div>
+                <div className="h-3 bg-muted rounded w-2/3"></div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div

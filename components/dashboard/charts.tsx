@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import {
   BarChart,
   Bar,
@@ -23,42 +24,7 @@ import {
   ChartLegendContent,
 } from '@/components/ui/chart'
 import type { ChartConfig } from '@/components/ui/chart'
-
-// Sample data
-const appointmentsData = [
-  { month: 'Ene', completadas: 120, canceladas: 15, pendientes: 25 },
-  { month: 'Feb', completadas: 145, canceladas: 12, pendientes: 30 },
-  { month: 'Mar', completadas: 160, canceladas: 18, pendientes: 22 },
-  { month: 'Abr', completadas: 135, canceladas: 10, pendientes: 28 },
-  { month: 'May', completadas: 180, canceladas: 14, pendientes: 35 },
-  { month: 'Jun', completadas: 195, canceladas: 8, pendientes: 20 },
-]
-
-const patientGrowthData = [
-  { month: 'Ene', nuevos: 85, retorno: 120 },
-  { month: 'Feb', nuevos: 95, retorno: 135 },
-  { month: 'Mar', nuevos: 110, retorno: 145 },
-  { month: 'Abr', nuevos: 90, retorno: 155 },
-  { month: 'May', nuevos: 125, retorno: 170 },
-  { month: 'Jun', nuevos: 140, retorno: 185 },
-]
-
-const departmentData = [
-  { name: 'Cardiología', value: 25, fill: 'var(--color-chart-1)' },
-  { name: 'Pediatría', value: 20, fill: 'var(--color-chart-2)' },
-  { name: 'Neurología', value: 18, fill: 'var(--color-chart-3)' },
-  { name: 'Traumatología', value: 15, fill: 'var(--color-chart-4)' },
-  { name: 'Otros', value: 22, fill: 'var(--color-chart-5)' },
-]
-
-const revenueData = [
-  { month: 'Ene', ingresos: 45000, gastos: 32000 },
-  { month: 'Feb', ingresos: 52000, gastos: 35000 },
-  { month: 'Mar', ingresos: 48000, gastos: 30000 },
-  { month: 'Abr', ingresos: 61000, gastos: 38000 },
-  { month: 'May', ingresos: 55000, gastos: 34000 },
-  { month: 'Jun', ingresos: 67000, gastos: 40000 },
-]
+import { Skeleton } from '@/components/ui/skeleton'
 
 const appointmentsConfig = {
   completadas: {
@@ -121,6 +87,40 @@ const revenueConfig = {
 } satisfies ChartConfig
 
 export function AppointmentsBarChart() {
+  const [data, setData] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/charts')
+        if (!response.ok) throw new Error('Failed to fetch charts data')
+        const chartsData = await response.json()
+        setData(chartsData.appointmentsData || [])
+      } catch (error) {
+        console.error('Error fetching appointments data:', error)
+        setData([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return (
+      <Card className="transition-smooth hover:shadow-lg">
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-60" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="transition-smooth hover:shadow-lg">
       <CardHeader>
@@ -129,7 +129,7 @@ export function AppointmentsBarChart() {
       </CardHeader>
       <CardContent>
         <ChartContainer config={appointmentsConfig} className="h-[300px] w-full">
-          <BarChart data={appointmentsData} accessibilityLayer>
+          <BarChart data={data} accessibilityLayer>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
             <XAxis
               dataKey="month"
@@ -163,6 +163,40 @@ export function AppointmentsBarChart() {
 }
 
 export function PatientGrowthLineChart() {
+  const [data, setData] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/charts')
+        if (!response.ok) throw new Error('Failed to fetch charts data')
+        const chartsData = await response.json()
+        setData(chartsData.patientGrowthData || [])
+      } catch (error) {
+        console.error('Error fetching patient growth data:', error)
+        setData([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return (
+      <Card className="transition-smooth hover:shadow-lg">
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-60" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="transition-smooth hover:shadow-lg">
       <CardHeader>
@@ -171,7 +205,7 @@ export function PatientGrowthLineChart() {
       </CardHeader>
       <CardContent>
         <ChartContainer config={patientGrowthConfig} className="h-[300px] w-full">
-          <LineChart data={patientGrowthData} accessibilityLayer>
+          <LineChart data={data} accessibilityLayer>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
             <XAxis
               dataKey="month"
@@ -206,6 +240,40 @@ export function PatientGrowthLineChart() {
 }
 
 export function DepartmentPieChart() {
+  const [data, setData] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/charts')
+        if (!response.ok) throw new Error('Failed to fetch charts data')
+        const chartsData = await response.json()
+        setData(chartsData.departmentData || [])
+      } catch (error) {
+        console.error('Error fetching department data:', error)
+        setData([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return (
+      <Card className="transition-smooth hover:shadow-lg">
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-60" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="transition-smooth hover:shadow-lg">
       <CardHeader>
@@ -217,7 +285,7 @@ export function DepartmentPieChart() {
           <PieChart accessibilityLayer>
             <ChartTooltip content={<ChartTooltipContent />} />
             <Pie
-              data={departmentData}
+              data={data}
               cx="50%"
               cy="50%"
               innerRadius={60}
@@ -228,7 +296,7 @@ export function DepartmentPieChart() {
               label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
               labelLine={false}
             >
-              {departmentData.map((entry, index) => (
+              {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.fill} />
               ))}
             </Pie>
@@ -241,6 +309,40 @@ export function DepartmentPieChart() {
 }
 
 export function RevenueAreaChart() {
+  const [data, setData] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/charts')
+        if (!response.ok) throw new Error('Failed to fetch charts data')
+        const chartsData = await response.json()
+        setData(chartsData.revenueData || [])
+      } catch (error) {
+        console.error('Error fetching revenue data:', error)
+        setData([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return (
+      <Card className="transition-smooth hover:shadow-lg">
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-60" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="transition-smooth hover:shadow-lg">
       <CardHeader>
@@ -249,7 +351,7 @@ export function RevenueAreaChart() {
       </CardHeader>
       <CardContent>
         <ChartContainer config={revenueConfig} className="h-[300px] w-full">
-          <AreaChart data={revenueData} accessibilityLayer>
+          <AreaChart data={data} accessibilityLayer>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
             <XAxis
               dataKey="month"

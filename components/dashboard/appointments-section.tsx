@@ -31,6 +31,24 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   Search,
   Filter,
   CalendarPlus,
@@ -38,134 +56,199 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Video,
-  MapPin,
+  Edit,
+  Trash2,
 } from 'lucide-react'
 
+interface Patient {
+  id: number
+  nombre: string
+  apellido: string
+}
+
+interface Doctor {
+  id: number
+  nombre: string
+  apellido: string
+  especialidad: string
+}
+
 interface Appointment {
-  id: string
-  patient: {
-    name: string
-    avatar?: string
-  }
-  doctor: {
-    name: string
-    specialty: string
-  }
-  date: string
-  time: string
-  type: 'presencial' | 'virtual'
-  status: 'scheduled' | 'completed' | 'cancelled' | 'in-progress'
-  reason: string
+  id: number
+  paciente_id: number
+  medico_id: number
+  fecha_hora: string
+  motivo: string
+  estado: string
+  paciente_nombre: string
+  paciente_apellido: string
+  medico_nombre: string
+  medico_apellido: string
 }
 
-const appointments: Appointment[] = [
-  {
-    id: '1',
-    patient: { name: 'María García López' },
-    doctor: { name: 'Dr. Roberto García', specialty: 'Cardiología' },
-    date: '2024-03-18',
-    time: '09:00',
-    type: 'presencial',
-    status: 'scheduled',
-    reason: 'Consulta de seguimiento',
-  },
-  {
-    id: '2',
-    patient: { name: 'Juan Pérez Rodríguez' },
-    doctor: { name: 'Dra. Ana Rodríguez', specialty: 'Pediatría' },
-    date: '2024-03-18',
-    time: '10:30',
-    type: 'virtual',
-    status: 'in-progress',
-    reason: 'Revisión de resultados',
-  },
-  {
-    id: '3',
-    patient: { name: 'Ana Martínez Sánchez' },
-    doctor: { name: 'Dr. Carlos Méndez', specialty: 'Neurología' },
-    date: '2024-03-18',
-    time: '11:00',
-    type: 'presencial',
-    status: 'completed',
-    reason: 'Primera consulta',
-  },
-  {
-    id: '4',
-    patient: { name: 'Carlos Ruiz Hernández' },
-    doctor: { name: 'Dra. Laura Torres', specialty: 'Traumatología' },
-    date: '2024-03-18',
-    time: '14:00',
-    type: 'presencial',
-    status: 'cancelled',
-    reason: 'Control post-operatorio',
-  },
-  {
-    id: '5',
-    patient: { name: 'Laura Sánchez Torres' },
-    doctor: { name: 'Dr. Miguel Sánchez', specialty: 'Medicina General' },
-    date: '2024-03-18',
-    time: '15:30',
-    type: 'virtual',
-    status: 'scheduled',
-    reason: 'Chequeo general',
-  },
-  {
-    id: '6',
-    patient: { name: 'Pedro Hernández Díaz' },
-    doctor: { name: 'Dra. Patricia López', specialty: 'Ginecología' },
-    date: '2024-03-19',
-    time: '09:00',
-    type: 'presencial',
-    status: 'scheduled',
-    reason: 'Consulta prenatal',
-  },
-]
 
-const statusStyles = {
-  scheduled: {
-    bg: 'bg-info/10',
-    text: 'text-info',
-    label: 'Programada',
-    icon: Clock,
-  },
-  'in-progress': {
-    bg: 'bg-warning/10',
-    text: 'text-warning',
-    label: 'En Curso',
-    icon: Clock,
-  },
-  completed: {
-    bg: 'bg-success/10',
-    text: 'text-success',
-    label: 'Completada',
-    icon: CheckCircle,
-  },
-  cancelled: {
-    bg: 'bg-destructive/10',
-    text: 'text-destructive',
-    label: 'Cancelada',
-    icon: XCircle,
-  },
-}
+
 
 export function AppointmentsSection() {
+  const [appointments, setAppointments] = React.useState<Appointment[]>([])
+  const [loading, setLoading] = React.useState(true)
   const [searchQuery, setSearchQuery] = React.useState('')
   const [statusFilter, setStatusFilter] = React.useState<string>('all')
-  const [dateFilter, setDateFilter] = React.useState<string>('')
-
-  const filteredAppointments = appointments.filter((appointment) => {
-    const matchesSearch =
-      appointment.patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      appointment.doctor.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus =
-      statusFilter === 'all' || appointment.status === statusFilter
-    const matchesDate = !dateFilter || appointment.date === dateFilter
-    return matchesSearch && matchesStatus && matchesDate
+  const [patients, setPatients] = React.useState<Patient[]>([])
+  const [doctors, setDoctors] = React.useState<Doctor[]>([])
+  const [isAddModalOpen, setIsAddModalOpen] = React.useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false)
+  const [editingAppointment, setEditingAppointment] = React.useState<Appointment | null>(null)
+  const [deleteAppointmentId, setDeleteAppointmentId] = React.useState<number | null>(null)
+  const [newAppointment, setNewAppointment] = React.useState({
+    paciente_id: '',
+    medico_id: '',
+    fecha_hora: '',
+    motivo: '',
+    estado: 'programada'
   })
 
+  React.useEffect(() => {
+    fetchAppointments()
+    fetchPatients()
+    fetchDoctors()
+  }, [])
+
+  const fetchAppointments = () => {
+    fetch('/api/citas')
+      .then(response => response.json())
+      .then(data => {
+        setAppointments(data)
+        setLoading(false)
+      })
+      .catch(error => {
+        console.error('Error fetching appointments:', error)
+        setLoading(false)
+      })
+  }
+
+  const fetchPatients = () => {
+    fetch('/api/pacientes')
+      .then(response => response.json())
+      .then(data => setPatients(data))
+      .catch(error => console.error('Error fetching patients:', error))
+  }
+
+  const fetchDoctors = () => {
+    fetch('/api/medicos')
+      .then(response => response.json())
+      .then(data => setDoctors(data))
+      .catch(error => console.error('Error fetching doctors:', error))
+  }
+
+  const handleAddAppointment = async () => {
+    try {
+      const response = await fetch('/api/citas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...newAppointment,
+          paciente_id: parseInt(newAppointment.paciente_id),
+          medico_id: parseInt(newAppointment.medico_id)
+        }),
+      })
+      const result = await response.json()
+      if (result.id) {
+        setIsAddModalOpen(false)
+        setNewAppointment({
+          paciente_id: '',
+          medico_id: '',
+          fecha_hora: '',
+          motivo: '',
+          estado: 'programada'
+        })
+        fetchAppointments() // Refresh list
+      }
+    } catch (error) {
+      console.error('Error adding appointment:', error)
+    }
+  }
+
+  const handleEditAppointment = async () => {
+    if (!editingAppointment) return
+
+    try {
+      const response = await fetch(`/api/citas?id=${editingAppointment.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editingAppointment),
+      })
+      const result = await response.json()
+      if (result.affected > 0) {
+        setIsEditModalOpen(false)
+        setEditingAppointment(null)
+        fetchAppointments() // Refresh list
+      }
+    } catch (error) {
+      console.error('Error updating appointment:', error)
+    }
+  }
+
+  const handleDeleteAppointment = async () => {
+    if (!deleteAppointmentId) return
+
+    try {
+      const response = await fetch(`/api/citas?id=${deleteAppointmentId}`, {
+        method: 'DELETE',
+      })
+      const result = await response.json()
+      if (result.affected > 0) {
+        setDeleteAppointmentId(null)
+        fetchAppointments() // Refresh list
+      }
+    } catch (error) {
+      console.error('Error deleting appointment:', error)
+    }
+  }
+
+  const handleStatusChange = async (appointmentId: number, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/citas?id=${appointmentId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ estado: newStatus }),
+      })
+      const result = await response.json()
+      if (result.affected > 0) {
+        fetchAppointments() // Refresh list
+      }
+    } catch (error) {
+      console.error('Error updating appointment status:', error)
+    }
+  }
+
+  const openEditModal = (appointment: Appointment) => {
+    setEditingAppointment(appointment)
+    setIsEditModalOpen(true)
+  }
+
+  const filteredAppointments = appointments.filter((appointment) => {
+    const fullName = `${appointment.paciente_nombre} ${appointment.paciente_apellido}`.toLowerCase()
+    const doctorName = `${appointment.medico_nombre} ${appointment.medico_apellido}`.toLowerCase()
+    const matchesSearch = fullName.includes(searchQuery.toLowerCase()) ||
+                         doctorName.includes(searchQuery.toLowerCase()) ||
+                         appointment.motivo.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesStatus = statusFilter === 'all' || appointment.estado === statusFilter
+    return matchesSearch && matchesStatus
+  })
+
+  if (loading) {
+    return <div>Cargando citas...</div>
+  }
+
   const todaysAppointments = appointments.filter(
-    (a) => a.date === '2024-03-18' && a.status !== 'cancelled'
+    (a) => new Date(a.fecha_hora).toDateString() === new Date().toDateString() && a.estado !== 'cancelada'
   )
 
   return (
@@ -178,10 +261,188 @@ export function AppointmentsSection() {
             Gestiona las citas médicas del hospital
           </p>
         </div>
-        <Button className="gap-2 shadow-sm">
-          <CalendarPlus className="w-4 h-4" aria-hidden="true" />
-          Nueva Cita
-        </Button>
+        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 shadow-sm">
+              <CalendarPlus className="w-4 h-4" aria-hidden="true" />
+              Nueva Cita
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Agendar Nueva Cita</DialogTitle>
+              <DialogDescription>
+                Complete la información de la cita.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div>
+                <label className="text-sm font-medium">Paciente</label>
+                <Select value={newAppointment.paciente_id} onValueChange={(value) => setNewAppointment({...newAppointment, paciente_id: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar paciente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {patients.map((patient) => (
+                      <SelectItem key={patient.id} value={patient.id.toString()}>
+                        {patient.nombre} {patient.apellido}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Doctor</label>
+                <Select value={newAppointment.medico_id} onValueChange={(value) => setNewAppointment({...newAppointment, medico_id: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar doctor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {doctors.map((doctor) => (
+                      <SelectItem key={doctor.id} value={doctor.id.toString()}>
+                        Dr. {doctor.nombre} {doctor.apellido} - {doctor.especialidad}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Fecha y Hora</label>
+                <Input
+                  type="datetime-local"
+                  value={newAppointment.fecha_hora}
+                  onChange={(e) => setNewAppointment({...newAppointment, fecha_hora: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Motivo</label>
+                <Input
+                  value={newAppointment.motivo}
+                  onChange={(e) => setNewAppointment({...newAppointment, motivo: e.target.value})}
+                  placeholder="Motivo de la cita"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddAppointment}>
+                Agendar Cita
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Appointment Modal */}
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Cita</DialogTitle>
+              <DialogDescription>
+                Modifique la información de la cita.
+              </DialogDescription>
+            </DialogHeader>
+            {editingAppointment && (
+              <div className="grid gap-4 py-4">
+                <div>
+                  <label className="text-sm font-medium">Paciente</label>
+                  <Select
+                    value={editingAppointment.paciente_id.toString()}
+                    onValueChange={(value) => setEditingAppointment({...editingAppointment, paciente_id: parseInt(value)})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar paciente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {patients.map((patient) => (
+                        <SelectItem key={patient.id} value={patient.id.toString()}>
+                          {patient.nombre} {patient.apellido}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Doctor</label>
+                  <Select
+                    value={editingAppointment.medico_id.toString()}
+                    onValueChange={(value) => setEditingAppointment({...editingAppointment, medico_id: parseInt(value)})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar doctor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {doctors.map((doctor) => (
+                        <SelectItem key={doctor.id} value={doctor.id.toString()}>
+                          Dr. {doctor.nombre} {doctor.apellido} - {doctor.especialidad}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Fecha y Hora</label>
+                  <Input
+                    type="datetime-local"
+                    value={editingAppointment.fecha_hora.slice(0, 16)}
+                    onChange={(e) => setEditingAppointment({...editingAppointment, fecha_hora: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Motivo</label>
+                  <Input
+                    value={editingAppointment.motivo}
+                    onChange={(e) => setEditingAppointment({...editingAppointment, motivo: e.target.value})}
+                    placeholder="Motivo de la cita"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Estado</label>
+                  <Select
+                    value={editingAppointment.estado}
+                    onValueChange={(value) => setEditingAppointment({...editingAppointment, estado: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="programada">Programada</SelectItem>
+                      <SelectItem value="completada">Completada</SelectItem>
+                      <SelectItem value="cancelada">Cancelada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleEditAppointment}>
+                Guardar Cambios
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!deleteAppointmentId} onOpenChange={() => setDeleteAppointmentId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción no se puede deshacer. Esto eliminará permanentemente la cita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteAppointment}>
+                Eliminar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       {/* Quick Stats */}
@@ -197,7 +458,7 @@ export function AppointmentsSection() {
         <Card className="transition-smooth hover:shadow-md">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-info">
-              {appointments.filter((a) => a.status === 'scheduled').length}
+              {appointments.filter((a) => a.estado === 'programada').length}
             </div>
             <p className="text-sm text-muted-foreground">Programadas</p>
           </CardContent>
@@ -205,7 +466,7 @@ export function AppointmentsSection() {
         <Card className="transition-smooth hover:shadow-md">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-success">
-              {appointments.filter((a) => a.status === 'completed').length}
+              {appointments.filter((a) => a.estado === 'completada').length}
             </div>
             <p className="text-sm text-muted-foreground">Completadas</p>
           </CardContent>
@@ -213,7 +474,7 @@ export function AppointmentsSection() {
         <Card className="transition-smooth hover:shadow-md">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-destructive">
-              {appointments.filter((a) => a.status === 'cancelled').length}
+              {appointments.filter((a) => a.estado === 'cancelada').length}
             </div>
             <p className="text-sm text-muted-foreground">Canceladas</p>
           </CardContent>
@@ -237,25 +498,17 @@ export function AppointmentsSection() {
                 aria-label="Buscar citas"
               />
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-              <Input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="w-auto"
-                aria-label="Filtrar por fecha"
-              />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[150px]" aria-label="Filtrar por estado">
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="scheduled">Programadas</SelectItem>
-                  <SelectItem value="in-progress">En Curso</SelectItem>
-                  <SelectItem value="completed">Completadas</SelectItem>
-                  <SelectItem value="cancelled">Canceladas</SelectItem>
+                  <SelectItem value="programada">Programadas</SelectItem>
+                  <SelectItem value="completada">Completadas</SelectItem>
+                  <SelectItem value="cancelada">Canceladas</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -279,7 +532,6 @@ export function AppointmentsSection() {
                   <TableHead>Paciente</TableHead>
                   <TableHead>Doctor</TableHead>
                   <TableHead>Fecha y Hora</TableHead>
-                  <TableHead>Tipo</TableHead>
                   <TableHead>Motivo</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
@@ -287,8 +539,6 @@ export function AppointmentsSection() {
               </TableHeader>
               <TableBody>
                 {filteredAppointments.map((appointment) => {
-                  const status = statusStyles[appointment.status]
-                  const StatusIcon = status.icon
                   return (
                     <TableRow
                       key={appointment.id}
@@ -297,66 +547,48 @@ export function AppointmentsSection() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10">
-                            <AvatarImage src={appointment.patient.avatar} />
                             <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                              {appointment.patient.name
-                                .split(' ')
-                                .map((n) => n[0])
-                                .join('')
-                                .slice(0, 2)}
+                              {appointment.paciente_nombre[0]}{appointment.paciente_apellido[0]}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="font-medium">{appointment.patient.name}</span>
+                          <span className="font-medium">{appointment.paciente_nombre} {appointment.paciente_apellido}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{appointment.doctor.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {appointment.doctor.specialty}
-                          </p>
+                          <p className="font-medium">Dr. {appointment.medico_nombre} {appointment.medico_apellido}</p>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div>
                           <p className="font-medium">
-                            {new Date(appointment.date).toLocaleDateString('es-ES', {
+                            {new Date(appointment.fecha_hora).toLocaleDateString('es-ES', {
                               day: 'numeric',
                               month: 'short',
                             })}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {appointment.time}
+                            {new Date(appointment.fecha_hora).toLocaleTimeString('es-ES', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
                           </p>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            'gap-1',
-                            appointment.type === 'virtual'
-                              ? 'text-info'
-                              : 'text-foreground'
-                          )}
-                        >
-                          {appointment.type === 'virtual' ? (
-                            <Video className="w-3 h-3" aria-hidden="true" />
-                          ) : (
-                            <MapPin className="w-3 h-3" aria-hidden="true" />
-                          )}
-                          {appointment.type === 'virtual' ? 'Virtual' : 'Presencial'}
-                        </Badge>
-                      </TableCell>
                       <TableCell className="max-w-[200px]">
                         <span className="text-sm text-muted-foreground truncate block">
-                          {appointment.reason}
+                          {appointment.motivo}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <Badge className={cn('gap-1', status.bg, status.text)}>
-                          <StatusIcon className="w-3 h-3" aria-hidden="true" />
-                          {status.label}
+                        <Badge className={cn('gap-1',
+                          appointment.estado === 'programada' ? 'bg-blue-100 text-blue-800' :
+                          appointment.estado === 'completada' ? 'bg-green-100 text-green-800' :
+                          appointment.estado === 'cancelada' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+                        )}>
+                          {appointment.estado === 'programada' ? 'Programada' :
+                           appointment.estado === 'completada' ? 'Completada' :
+                           appointment.estado === 'cancelada' ? 'Cancelada' : 'Desconocido'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -365,7 +597,7 @@ export function AppointmentsSection() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              aria-label={`Acciones para cita de ${appointment.patient.name}`}
+                              aria-label={`Acciones para cita de ${appointment.paciente_nombre} ${appointment.paciente_apellido}`}
                             >
                               <MoreHorizontal className="w-4 h-4" />
                             </Button>
@@ -373,18 +605,35 @@ export function AppointmentsSection() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="cursor-pointer">
-                              Ver Detalles
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer">
-                              Reprogramar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer text-success">
-                              Marcar Completada
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() => openEditModal(appointment)}
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Editar Cita
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="cursor-pointer text-destructive">
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() => handleStatusChange(appointment.id, 'completada')}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Marcar Completada
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() => handleStatusChange(appointment.id, 'cancelada')}
+                            >
+                              <XCircle className="w-4 h-4 mr-2" />
                               Cancelar Cita
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="cursor-pointer text-destructive focus:text-destructive"
+                              onClick={() => setDeleteAppointmentId(appointment.id)}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Eliminar Cita
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

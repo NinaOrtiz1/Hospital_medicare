@@ -10,6 +10,16 @@ This repository is linked to a [v0](https://v0.app) project. You can continue de
 
 ## Getting Started
 
+### Backend Setup (PHP/MySQL)
+
+1. Install XAMPP or a similar PHP/MySQL server.
+2. Copy the PHP files (`config.php`, `pacientes.php`, `medicos.php`, `citas.php`, `usuarios.php`, `setup.php`) to your web server's document root (e.g., `htdocs/hospital_medicare/`).
+3. Update the database credentials in `config.php` if necessary.
+4. Run `setup.php` in your browser to create the database and tables: `http://localhost/hospital_medicare/setup.php`
+5. The API endpoints are proxied through Next.js at `/api/pacientes`, `/api/medicos`, `/api/citas`, `/api/usuarios`.
+
+### Frontend Setup (Next.js)
+
 First, run the development server:
 
 ```bash

@@ -9,6 +9,8 @@ import {
   UserCog,
   CalendarDays,
   FileText,
+  Bell,
+  Settings,
 } from 'lucide-react'
 
 interface ContentTabsProps {
@@ -23,6 +25,8 @@ const tabItems = [
   { id: 'doctors', label: 'Doctores', icon: UserCog },
   { id: 'appointments', label: 'Citas', icon: CalendarDays },
   { id: 'medical-history', label: 'Historial', icon: FileText },
+  { id: 'notifications', label: 'Notificaciones', icon: Bell },
+  { id: 'settings', label: 'Configuración', icon: Settings },
 ]
 
 export function ContentTabs({ activeTab, onTabChange, children }: ContentTabsProps) {

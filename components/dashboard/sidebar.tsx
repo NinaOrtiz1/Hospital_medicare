@@ -15,6 +15,7 @@ import {
   Activity,
   Menu,
   X,
+  UserCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -31,6 +32,7 @@ const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'patients', label: 'Pacientes', icon: Users },
   { id: 'doctors', label: 'Doctores', icon: UserCog },
+  { id: 'users', label: 'Usuarios', icon: UserCheck },
   { id: 'appointments', label: 'Citas', icon: CalendarDays },
   { id: 'medical-history', label: 'Historial Médico', icon: FileText },
 ]
